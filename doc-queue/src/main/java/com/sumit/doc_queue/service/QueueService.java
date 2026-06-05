@@ -36,6 +36,7 @@ public class QueueService {
             System.out.println(p.getFullName()+" is called");
             p.setStatus(QueueStatus.IN_PROGRESS);
             patientRepository.save(p);
+            this.broadcastQueueSize();
             return Optional.of(p);
         }
     }
@@ -48,5 +49,18 @@ public class QueueService {
         emitter.onCompletion(()->this.emitters.remove(emitter));
         emitter.onTimeout(()->this.emitters.remove(emitter));
         return emitter;
+    }
+
+    public void broadcastQueueSize(){
+        long waitingCount=patientRepository.findByStatusOrderByArrivalTime(QueueStatus.WAITING).size();
+        for(SseEmitter emitter: emitters){
+            try{
+                emitter.send(SseEmitter.event()
+                        .name("Queue-Update")
+                        .data(waitingCount));
+            }catch(Exception e){
+                emitters.remove(emitter);
+            }
+        }
     }
 }
