@@ -13,4 +13,7 @@ public class Patient {
     private String fullName;
 
     private java.time.LocalDateTime arrivalTime;
+
+    @Enumerated(EnumType.STRING) // using this so that we take waiting not 0 as number
+    private QueueStatus status=QueueStatus.WAITING;
 }
