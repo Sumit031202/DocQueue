@@ -30,6 +30,7 @@ public class QueueService {
         }else{
             Patient p=patientList.get(0);
             // call the patient
+            System.out.println(p.getFullName()+" is called");
             p.setStatus(QueueStatus.IN_PROGRESS);
             patientRepository.save(p);
             return Optional.of(p);
