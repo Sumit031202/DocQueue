@@ -8,6 +8,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/api/patients")
+@CrossOrigin(origins = "http://localhost:5173")
 public class PatientQueueController {
     private final QueueService queueService;
     public PatientQueueController(QueueService queueService){
