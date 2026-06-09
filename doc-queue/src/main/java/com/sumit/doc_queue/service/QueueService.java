@@ -23,6 +23,7 @@ public class QueueService {
 
         patientRepository.save(p);
         System.out.println(p.getFullName()+" is saved in the database");
+        this.broadcastQueueSize();
         return p;
     }
 
