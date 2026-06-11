@@ -68,11 +68,26 @@ public class QueueService {
     }
     public void broadcastQueue(){
         List<Patient> waitingQueue=patientRepository.findByStatusOrderByArrivalTime(QueueStatus.WAITING);
+        List<Patient> progressQueue=patientRepository.findByStatusOrderByArrivalTime(QueueStatus.IN_PROGRESS);
+        Patient patient=null;
+        if(!progressQueue.isEmpty()){
+            patient=progressQueue.get(progressQueue.size()-1);
+        }
         for(SseEmitter emitter: emitters){
             try{
                 emitter.send(SseEmitter.event()
                         .name("Queue-Update")
                         .data(waitingQueue));
+                if(patient!=null){
+                    emitter.send(SseEmitter.event()
+                            .name("Active-Patient")
+                            .data(patient));
+                }else{
+                    emitter.send(SseEmitter.event()
+                            .name("Active-Patient")
+                            .data("{\"fullName\":\"Nobody\"}"));
+                }
+
             }catch(java.io.IOException e) {
                 // This just means a user closed or refreshed their browser tab.
                 // We silent-remove them without printing a massive scary red stack trace!
