@@ -51,6 +51,28 @@ public class QueueService {
         emitter.onError((ex)->this.emitters.remove(emitter));
         emitter.onCompletion(()->this.emitters.remove(emitter));
         emitter.onTimeout(()->this.emitters.remove(emitter));
+        try{
+            List<Patient> waitingQueue=patientRepository.findByStatusOrderByArrivalTime(QueueStatus.WAITING);
+            List<Patient> progressQueue=patientRepository.findByStatusOrderByArrivalTime(QueueStatus.IN_PROGRESS);
+            Patient patient=null;
+            if(!progressQueue.isEmpty()){
+                patient=progressQueue.get(progressQueue.size()-1);
+            }
+            emitter.send(SseEmitter.event()
+                    .name("Queue-Update")
+                    .data(waitingQueue));
+            if(patient!=null){
+                emitter.send(SseEmitter.event()
+                        .name("Active-Patient")
+                        .data(patient));
+            }else{
+                emitter.send(SseEmitter.event()
+                        .name("Active-Patient")
+                        .data("{\"fullName\":\"Nobody\"}"));
+            }
+        }catch (Exception e){
+            this.emitters.remove(emitter);
+        }
         return emitter;
     }
 
