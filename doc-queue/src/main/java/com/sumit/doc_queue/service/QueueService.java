@@ -23,7 +23,8 @@ public class QueueService {
 
         patientRepository.save(p);
         System.out.println(p.getFullName()+" is saved in the database");
-        this.broadcastQueueSize();
+//        this.broadcastQueueSize();
+        this.broadcastQueue();
         return p;
     }
 
@@ -37,7 +38,8 @@ public class QueueService {
             System.out.println(p.getFullName()+" is called");
             p.setStatus(QueueStatus.IN_PROGRESS);
             patientRepository.save(p);
-            this.broadcastQueueSize();
+//            this.broadcastQueueSize();
+            this.broadcastQueue();
             return Optional.of(p);
         }
     }
@@ -60,6 +62,23 @@ public class QueueService {
                         .name("Queue-Update")
                         .data(waitingCount));
             }catch(Exception e){
+                emitters.remove(emitter);
+            }
+        }
+    }
+    public void broadcastQueue(){
+        List<Patient> waitingQueue=patientRepository.findByStatusOrderByArrivalTime(QueueStatus.WAITING);
+        for(SseEmitter emitter: emitters){
+            try{
+                emitter.send(SseEmitter.event()
+                        .name("Queue-Update")
+                        .data(waitingQueue));
+            }catch(java.io.IOException e) {
+                // This just means a user closed or refreshed their browser tab.
+                // We silent-remove them without printing a massive scary red stack trace!
+                emitters.remove(emitter);
+            }catch(Exception e){
+                System.out.println("Unexpected broadcast error: "+e.getMessage());
                 emitters.remove(emitter);
             }
         }
