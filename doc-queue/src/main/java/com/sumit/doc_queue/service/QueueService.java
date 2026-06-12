@@ -29,8 +29,15 @@ public class QueueService {
     }
 
     public Optional<Patient> callNextPatient(){
+        List<Patient> activePatient=patientRepository.findByStatusOrderByArrivalTime(QueueStatus.IN_PROGRESS);
+        if(!activePatient.isEmpty()){
+            Patient currentPatient=activePatient.get(0);
+            currentPatient.setStatus(QueueStatus.COMPLETED);
+            patientRepository.save(currentPatient);
+        }
         List<Patient> patientList=patientRepository.findByStatusOrderByArrivalTime(QueueStatus.WAITING);
         if(patientList.isEmpty()){
+            this.broadcastQueue();
             return Optional.empty();
         }else{
             Patient p=patientList.get(0);
