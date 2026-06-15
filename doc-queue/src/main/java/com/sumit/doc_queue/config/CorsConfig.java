@@ -15,7 +15,8 @@ public class CorsConfig {
                 registry.addMapping("/**") // Applies CORS to all endpoints including streaming /stream
                         .allowedOrigins(
                                 "http://localhost:5173",    // For local testing
-                                "https://docqueue.online"   // For your live Vercel production deployment
+                                "https://docqueue.online",
+                                "https://www.docqueue.online"// For your live Vercel production deployment
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
