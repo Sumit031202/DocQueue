@@ -9,7 +9,6 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/doctors")
-@CrossOrigin(origins = {"http://localhost:5173","https://docqueue.online"})
 public class DoctorQueueController {
     private final QueueService queueService;
     public DoctorQueueController(QueueService queueService){
