@@ -16,7 +16,8 @@ public class CorsConfig {
                         .allowedOrigins(
                                 "http://localhost:5173",    // For local testing
                                 "https://docqueue.online",
-                                "https://www.docqueue.online"// For your live Vercel production deployment
+                                "https://www.docqueue.online",
+                                "https://docqueue-frontend.vercel.app"// For your live Vercel production deployment
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
