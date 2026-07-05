@@ -1,5 +1,6 @@
 package com.sumit.doc_queue.model;
 
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -16,4 +17,7 @@ public class Patient {
 
     @Enumerated(EnumType.STRING) // using this so that we take waiting not 0 as number
     private QueueStatus status=QueueStatus.WAITING;
+    @ManyToOne
+    @JoinColumn(nullable=false, name="doctor_id")
+    private Doctor doctor;
 }
