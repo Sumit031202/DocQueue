@@ -1,5 +1,6 @@
 package com.sumit.doc_queue.service;
 
+import com.sumit.doc_queue.model.Doctor;
 import com.sumit.doc_queue.model.Patient;
 import com.sumit.doc_queue.model.QueueStatus;
 import com.sumit.doc_queue.repository.PatientRepository;
@@ -16,10 +17,11 @@ public class QueueService {
     public QueueService(PatientRepository patientRepository){
         this.patientRepository=patientRepository;
     }
-    public Patient registerPatient(String name){
+    public Patient registerPatient(String name, Doctor doctor){
         Patient p=new Patient();
         p.setFullName(name);
         p.setArrivalTime(java.time.LocalDateTime.now());
+        p.setDoctor(doctor); // attach the doctor
 
         patientRepository.save(p);
         System.out.println(p.getFullName()+" is saved in the database");
