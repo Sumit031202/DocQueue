@@ -8,12 +8,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 public class QueueService {
     private final PatientRepository patientRepository;
-    private final List<SseEmitter> emitters=new CopyOnWriteArrayList<>(); // thread safe ArrayList
+//    private final List<SseEmitter> emitters=new CopyOnWriteArrayList<>(); // thread safe ArrayList
+    private final Map<Long, List<SseEmitter>> doctorEmitters = new ConcurrentHashMap<>();
     public QueueService(PatientRepository patientRepository){
         this.patientRepository=patientRepository;
     }
@@ -55,11 +57,12 @@ public class QueueService {
 
     // live connection
     public SseEmitter subscribe(Long doctorId){
+        List<SseEmitter> emitters=doctorEmitters.computeIfAbsent(doctorId,k->new CopyOnWriteArrayList<>());
         SseEmitter emitter=new SseEmitter(60*30*1000L);
         emitters.add(emitter);
-        emitter.onError((ex)->this.emitters.remove(emitter));
-        emitter.onCompletion(()->this.emitters.remove(emitter));
-        emitter.onTimeout(()->this.emitters.remove(emitter));
+        emitter.onError((ex)->emitters.remove(emitter));
+        emitter.onCompletion(()->emitters.remove(emitter));
+        emitter.onTimeout(()->emitters.remove(emitter));
         try{
             List<Patient> waitingQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.WAITING);
             List<Patient> progressQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
@@ -80,13 +83,17 @@ public class QueueService {
                         .data("{\"fullName\":\"Nobody\"}"));
             }
         }catch (Exception e){
-            this.emitters.remove(emitter);
+            emitters.remove(emitter);
         }
         return emitter;
     }
 
     public void broadcastQueueSize(Long doctorId){
         long waitingCount=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.WAITING).size();
+        List<SseEmitter> emitters=doctorEmitters.get(doctorId);
+        if (emitters == null || emitters.isEmpty()) {
+            return; // Nobody is currently watching this doctor's stream!
+        }
         for(SseEmitter emitter: emitters){
             try{
                 emitter.send(SseEmitter.event()
@@ -101,6 +108,10 @@ public class QueueService {
         List<Patient> waitingQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.WAITING);
         List<Patient> progressQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
         Patient patient=null;
+        List<SseEmitter> emitters=doctorEmitters.get(doctorId);
+        if (emitters == null || emitters.isEmpty()) {
+            return; // Nobody is currently watching this doctor's stream!
+        }
         if(!progressQueue.isEmpty()){
             patient=progressQueue.get(progressQueue.size()-1);
         }
