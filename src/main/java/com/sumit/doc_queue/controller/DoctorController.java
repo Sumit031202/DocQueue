@@ -1,10 +1,11 @@
 package com.sumit.doc_queue.controller;
 
-import com.sumit.doc_queue.model.Doctor;
+import com.sumit.doc_queue.dto.DoctorRequest;
+import com.sumit.doc_queue.dto.DoctorResponse;
 import com.sumit.doc_queue.model.Patient;
-import com.sumit.doc_queue.repository.DoctorRepository;
 import com.sumit.doc_queue.service.DoctorService;
 import com.sumit.doc_queue.service.QueueService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +20,12 @@ public class DoctorController {
     private final QueueService queueService;
 
     @PostMapping
-    public Doctor addDoctor(@RequestBody Doctor doctor){
-        doctorService.save(doctor);
-        return doctor;
+    public DoctorResponse addDoctor(@Valid @RequestBody DoctorRequest doctor){
+        return doctorService.save(doctor);
     }
     @GetMapping
-    public List<Doctor> getDoctors(){
-        List<Doctor> doctors=doctorService.getAllDoctors();
-        return doctors;
+    public List<DoctorResponse> getDoctors(){
+        return doctorService.getAllDoctors();
     }
     @PostMapping("/{doctorId}/next")
     public Optional<Patient> callNextPatient(@PathVariable Long doctorId){
