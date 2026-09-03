@@ -1,9 +1,12 @@
 package com.sumit.doc_queue.service;
 
+import com.sumit.doc_queue.dto.DoctorResponse;
 import com.sumit.doc_queue.model.Doctor;
 import com.sumit.doc_queue.model.Patient;
 import com.sumit.doc_queue.model.QueueStatus;
+import com.sumit.doc_queue.repository.DoctorRepository;
 import com.sumit.doc_queue.repository.PatientRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -12,13 +15,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
+@AllArgsConstructor
 public class QueueService {
     private final PatientRepository patientRepository;
+    private final DoctorRepository doctorRepository;
 //    private final List<SseEmitter> emitters=new CopyOnWriteArrayList<>(); // thread safe ArrayList
     private final Map<Long, List<SseEmitter>> doctorEmitters = new ConcurrentHashMap<>();
-    public QueueService(PatientRepository patientRepository){
-        this.patientRepository=patientRepository;
-    }
     public Patient registerPatient(String name, Doctor doctor){
         Patient p=new Patient();
         p.setFullName(name);
@@ -139,5 +141,10 @@ public class QueueService {
                 emitters.remove(emitter);
             }
         }
+    }
+
+    public Doctor find(Long id){
+        return doctorRepository.findById(id).
+                orElseThrow(()->new RuntimeException("Doctor not found with ID: "+id));
     }
 }
