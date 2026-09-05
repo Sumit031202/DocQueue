@@ -18,8 +18,8 @@ public class DoctorService {
         Doctor d=new Doctor();
         d.setName(doctor.getName());
         d.setSpecialization(doctor.getSpecialization());
-        doctorRepository.save(d);
-        return new DoctorResponse(d.getId(),d.getName(),d.getSpecialization());
+        Doctor savedDoctor=doctorRepository.save(d);
+        return new DoctorResponse(savedDoctor.getId(),savedDoctor.getName(),savedDoctor.getSpecialization());
     }
 
     public List<DoctorResponse> getAllDoctors() {
