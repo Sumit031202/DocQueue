@@ -2,6 +2,10 @@ package com.sumit.doc_queue.repository;
 
 import com.sumit.doc_queue.model.Doctor;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
 public interface DoctorRepository extends JpaRepository<Doctor,Long> {
     public boolean existsByEmail(String email);
+    public Optional<Doctor> findByEmail(String email);
 }
