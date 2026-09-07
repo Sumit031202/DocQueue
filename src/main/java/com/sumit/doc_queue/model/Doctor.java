@@ -11,7 +11,9 @@ import lombok.Data;
 public class Doctor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
-    private String Name;
-    private String Specialization;
+    private Long id;
+    private String name;
+    private String specialization;
+    private String email;
+    private String password;
 }
