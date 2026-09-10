@@ -4,6 +4,7 @@ import com.sumit.doc_queue.dto.DoctorLoginRequest;
 import com.sumit.doc_queue.dto.DoctorRegistrationRequest;
 import com.sumit.doc_queue.dto.DoctorResponse;
 import com.sumit.doc_queue.model.Doctor;
+import com.sumit.doc_queue.model.Role;
 import com.sumit.doc_queue.repository.DoctorRepository;
 import com.sumit.doc_queue.security.JwtService;
 import lombok.AllArgsConstructor;
@@ -30,6 +31,7 @@ public class AuthService {
             newDoctor.setEmail(doctor.getEmail());
             newDoctor.setSpecialization(doctor.getSpecialization());
             newDoctor.setPassword(passwordEncoder.encode(doctor.getPassword()));
+            newDoctor.setRole(Role.DOCTOR);
             Doctor savedDoctor=doctorRepository.save(newDoctor);
             return new DoctorResponse(savedDoctor.getId(),savedDoctor.getName(),savedDoctor.getSpecialization());
         }

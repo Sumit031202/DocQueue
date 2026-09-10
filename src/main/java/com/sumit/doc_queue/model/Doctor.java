@@ -1,9 +1,6 @@
 package com.sumit.doc_queue.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
@@ -16,4 +13,6 @@ public class Doctor {
     private String specialization;
     private String email;
     private String password;
+    @Enumerated(EnumType.STRING)
+    private Role role=Role.DOCTOR;
 }
