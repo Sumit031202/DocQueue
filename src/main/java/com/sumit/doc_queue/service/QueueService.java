@@ -41,9 +41,6 @@ public class QueueService {
         DoctorUserDetails userDetails=(DoctorUserDetails)authentication.getPrincipal();
         Long authenticatedDoctorId=userDetails.getDoctorId();
 
-        System.out.println("RESOURCE AUTH CHECK: authenticatedDoctorId="
-                + authenticatedDoctorId + ", requestedDoctorId=" + doctorId);
-
         if(!Objects.equals(authenticatedDoctorId, doctorId)){
             throw new AccessDeniedException("You cannot access another doctor's resources");
         }
