@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .csrf(csrf->csrf.disable())
                 .authorizeHttpRequests(auth->
                         auth.requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/doctors/**").hasRole("DOCTOR")
                                 .anyRequest().authenticated());
         return http.build();
     }
