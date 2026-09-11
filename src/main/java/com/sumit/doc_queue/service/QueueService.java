@@ -1,15 +1,17 @@
 package com.sumit.doc_queue.service;
 
-import com.sumit.doc_queue.dto.DoctorResponse;
 import com.sumit.doc_queue.model.Doctor;
 import com.sumit.doc_queue.model.Patient;
 import com.sumit.doc_queue.model.QueueStatus;
 import com.sumit.doc_queue.repository.DoctorRepository;
 import com.sumit.doc_queue.repository.PatientRepository;
+import com.sumit.doc_queue.security.DoctorUserDetails;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
+import org.springframework.security.access.AccessDeniedException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -35,6 +37,16 @@ public class QueueService {
     }
 
     public Optional<Patient> callNextPatient(Long doctorId){
+        Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
+        DoctorUserDetails userDetails=(DoctorUserDetails)authentication.getPrincipal();
+        Long authenticatedDoctorId=userDetails.getDoctorId();
+
+        System.out.println("RESOURCE AUTH CHECK: authenticatedDoctorId="
+                + authenticatedDoctorId + ", requestedDoctorId=" + doctorId);
+
+        if(!Objects.equals(authenticatedDoctorId, doctorId)){
+            throw new AccessDeniedException("You cannot access another doctor's resources");
+        }
         List<Patient> activePatient=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
         if(!activePatient.isEmpty()){
             Patient currentPatient=activePatient.get(0);

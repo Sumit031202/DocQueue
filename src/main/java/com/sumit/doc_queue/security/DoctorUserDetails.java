@@ -12,6 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 public class DoctorUserDetails implements UserDetails {
     private final Doctor doctor;
+    public Long getDoctorId(){
+        return doctor.getId();
+    }
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(

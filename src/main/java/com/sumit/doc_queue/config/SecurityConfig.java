@@ -1,6 +1,7 @@
 package com.sumit.doc_queue.config;
 
 import com.sumit.doc_queue.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +32,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth->
                         auth.requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/doctors/**").hasRole("DOCTOR")
-                                .anyRequest().authenticated());
+                                .anyRequest().authenticated())
+                .exceptionHandling(exception->
+                        exception.authenticationEntryPoint((request,response,authException)->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                );
         return http.build();
     }
 
