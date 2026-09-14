@@ -3,6 +3,7 @@ package com.sumit.doc_queue.service;
 import com.sumit.doc_queue.dto.DoctorLoginRequest;
 import com.sumit.doc_queue.dto.DoctorRegistrationRequest;
 import com.sumit.doc_queue.dto.DoctorResponse;
+import com.sumit.doc_queue.dto.LoginResponse;
 import com.sumit.doc_queue.model.Doctor;
 import com.sumit.doc_queue.model.Role;
 import com.sumit.doc_queue.repository.DoctorRepository;
@@ -36,10 +37,11 @@ public class AuthService {
             return new DoctorResponse(savedDoctor.getId(),savedDoctor.getName(),savedDoctor.getSpecialization());
         }
     }
-    public String login(DoctorLoginRequest doctorLoginRequest){
+    public LoginResponse login(DoctorLoginRequest doctorLoginRequest){
         Authentication authentication=new UsernamePasswordAuthenticationToken(doctorLoginRequest.getEmail(),doctorLoginRequest.getPassword());
         Authentication authenticated=manager.authenticate(authentication);
         String email=authenticated.getName();
-        return jwtService.generateToken(email);
+        Doctor d=doctorRepository.findByEmail(email).orElseThrow();
+        return new LoginResponse(d.getId(),jwtService.generateToken(email));
     }
 }
