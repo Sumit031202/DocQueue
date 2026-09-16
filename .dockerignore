@@ -1,0 +1,7 @@
+.git
+.idea
+.vscode
+*.log
+README.md
+target/*
+!target/doc-queue-0.0.1-SNAPSHOT.jar
