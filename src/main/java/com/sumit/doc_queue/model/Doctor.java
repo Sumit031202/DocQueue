@@ -15,4 +15,7 @@ public class Doctor {
     private String password;
     @Enumerated(EnumType.STRING)
     private Role role=Role.DOCTOR;
+
+    private Double consultationTime;
+    private Long totalPatients;
 }
