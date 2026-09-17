@@ -3,6 +3,8 @@ package com.sumit.doc_queue.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalTime;
+
 @Data
 @Entity
 public class Doctor {
@@ -18,4 +20,7 @@ public class Doctor {
 
     private Double consultationTime;
     private Long totalPatients;
+
+    private LocalTime defaultStartTime=LocalTime.of(9,0);
+    private LocalTime defaultEndTime=LocalTime.of(13,0);
 }
