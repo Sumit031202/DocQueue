@@ -2,7 +2,6 @@ package com.sumit.doc_queue.service;
 
 import com.sumit.doc_queue.model.*;
 import com.sumit.doc_queue.repository.DoctorRepository;
-import com.sumit.doc_queue.repository.DoctorSessionRepository;
 import com.sumit.doc_queue.repository.PatientRepository;
 import com.sumit.doc_queue.security.DoctorUserDetails;
 import lombok.AllArgsConstructor;
@@ -12,7 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.security.access.AccessDeniedException;
 
-import java.time.LocalDate;
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -23,14 +23,12 @@ public class QueueService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorSessionService doctorSessionService;
-    private final DoctorSessionRepository doctorSessionRepository;
 //    private final List<SseEmitter> emitters=new CopyOnWriteArrayList<>(); // thread safe ArrayList
     private final Map<Long, List<SseEmitter>> doctorEmitters = new ConcurrentHashMap<>();
     public Patient registerPatient(String name, Doctor doctor){
         if(!doctorSessionService.checkSession(doctor.getId())){
             throw new RuntimeException("Registration is closed!");
         }
-        LocalDate today=LocalDate.now();
         DoctorSession session=doctorSessionService.getOrCreateTodaySession(doctor.getId());
         Patient p=new Patient();
         p.setFullName(name);
@@ -46,6 +44,8 @@ public class QueueService {
     }
 
     public Optional<Patient> callNextPatient(Long doctorId){
+        // time
+        LocalTime now=LocalTime.now();
         Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
         DoctorUserDetails userDetails=(DoctorUserDetails)authentication.getPrincipal();
         Long authenticatedDoctorId=userDetails.getDoctorId();
@@ -57,6 +57,24 @@ public class QueueService {
         if(!activePatient.isEmpty()){
             Patient currentPatient=activePatient.get(0);
             currentPatient.setStatus(QueueStatus.COMPLETED);
+            currentPatient.setOutTime(now);
+            if(currentPatient.getInTime()!=null){
+                long seconds= Duration.between(currentPatient.getInTime(),now).toSeconds();
+                double minutes=seconds/60.0;
+                currentPatient.setConsultationDuration(minutes);
+
+                Doctor doctor=currentPatient.getDoctor();
+                Double avgTime=doctor.getConsultationTime()==null? 0: doctor.getConsultationTime();
+                Long count=doctor.getTotalPatients();
+                if(count==null){
+                    doctor.setConsultationTime(minutes);
+                    doctor.setTotalPatients(1L);
+                }else{
+                    doctor.setConsultationTime((avgTime*count+minutes)/(count+1));
+                    doctor.setTotalPatients(count+1);
+                }
+                doctorRepository.save(doctor);
+            }
             patientRepository.save(currentPatient);
         }
         List<Patient> patientList=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.WAITING);
@@ -68,6 +86,7 @@ public class QueueService {
             // call the patient
             System.out.println(p.getFullName()+" is called for Doctor Id: "+doctorId);
             p.setStatus(QueueStatus.IN_PROGRESS);
+            p.setInTime(now);
             patientRepository.save(p);
 //            this.broadcastQueueSize();
             this.broadcastQueue(doctorId);
