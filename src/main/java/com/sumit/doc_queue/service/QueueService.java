@@ -1,9 +1,8 @@
 package com.sumit.doc_queue.service;
 
-import com.sumit.doc_queue.model.Doctor;
-import com.sumit.doc_queue.model.Patient;
-import com.sumit.doc_queue.model.QueueStatus;
+import com.sumit.doc_queue.model.*;
 import com.sumit.doc_queue.repository.DoctorRepository;
+import com.sumit.doc_queue.repository.DoctorSessionRepository;
 import com.sumit.doc_queue.repository.PatientRepository;
 import com.sumit.doc_queue.security.DoctorUserDetails;
 import lombok.AllArgsConstructor;
@@ -12,6 +11,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.security.access.AccessDeniedException;
+
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -21,13 +22,21 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class QueueService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final DoctorSessionService doctorSessionService;
+    private final DoctorSessionRepository doctorSessionRepository;
 //    private final List<SseEmitter> emitters=new CopyOnWriteArrayList<>(); // thread safe ArrayList
     private final Map<Long, List<SseEmitter>> doctorEmitters = new ConcurrentHashMap<>();
     public Patient registerPatient(String name, Doctor doctor){
+        if(!doctorSessionService.checkSession(doctor.getId())){
+            throw new RuntimeException("Registration is closed!");
+        }
+        LocalDate today=LocalDate.now();
+        DoctorSession session=doctorSessionService.getOrCreateTodaySession(doctor.getId());
         Patient p=new Patient();
         p.setFullName(name);
         p.setArrivalTime(java.time.LocalDateTime.now());
         p.setDoctor(doctor); // attach the doctor
+        p.setSession(session);
 
         patientRepository.save(p);
         System.out.println(p.getFullName()+" is saved in the database");
