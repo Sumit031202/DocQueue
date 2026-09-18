@@ -50,12 +50,12 @@ public class DoctorSessionService {
         existingSession.setStatus(SessionStatus.COMPLETED);
         doctorSessionRepository.save(existingSession);
     }
-    public void updateSession(Long doctorId,LocalTime startTime, LocalTime endTime){
+    public DoctorSession updateSession(Long doctorId,LocalTime startTime, LocalTime endTime){
         LocalDate today=LocalDate.now();
         DoctorSession existingSession=doctorSessionRepository.findByDoctorIdAndSessionDateAndStatusIn(doctorId,today,List.of(SessionStatus.ACTIVE,SessionStatus.PAUSED)).orElseThrow(()->new RuntimeException("No active sessions for this doctor"));
         existingSession.setStartTime(startTime);
         existingSession.setEndTime(endTime);
-        doctorSessionRepository.save(existingSession);
+        return doctorSessionRepository.save(existingSession);
     }
     public boolean checkSession(Long doctorId){
         LocalDate today=LocalDate.now();
