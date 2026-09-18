@@ -16,21 +16,13 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/doctors")
+@RequestMapping("/api/doctors")
 @AllArgsConstructor
 public class DoctorController {
     private final DoctorService doctorService;
     private final QueueService queueService;
     private final DoctorSessionService doctorSessionService;
 
-    @PostMapping
-    public DoctorResponse addDoctor(@Valid @RequestBody DoctorRequest doctor){
-        return doctorService.save(doctor);
-    }
-    @GetMapping
-    public List<DoctorResponse> getDoctors(){
-        return doctorService.getAllDoctors();
-    }
     @PostMapping("/{doctorId}/next")
     public Optional<Patient> callNextPatient(@PathVariable Long doctorId){
         return queueService.callNextPatient(doctorId);
@@ -38,10 +30,6 @@ public class DoctorController {
     @PatchMapping("/{doctorId}/toggle")
     public DoctorSession toggleStatus(@PathVariable Long doctorId){
         return doctorSessionService.toggleSessionStatus(doctorId);
-    }
-    @GetMapping("/{doctorId}/session")
-    public DoctorSession getSession(@PathVariable Long doctorId){
-        return doctorSessionService.getOrCreateTodaySession(doctorId);
     }
     @PatchMapping("/{doctorId}/end")
     public void endSession(@PathVariable Long doctorId){
