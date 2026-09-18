@@ -2,8 +2,11 @@ package com.sumit.doc_queue.controller;
 
 import com.sumit.doc_queue.dto.DoctorRequest;
 import com.sumit.doc_queue.dto.DoctorResponse;
+import com.sumit.doc_queue.dto.SessionTimingRequest;
+import com.sumit.doc_queue.model.DoctorSession;
 import com.sumit.doc_queue.model.Patient;
 import com.sumit.doc_queue.service.DoctorService;
+import com.sumit.doc_queue.service.DoctorSessionService;
 import com.sumit.doc_queue.service.QueueService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -18,6 +21,7 @@ import java.util.Optional;
 public class DoctorController {
     private final DoctorService doctorService;
     private final QueueService queueService;
+    private final DoctorSessionService doctorSessionService;
 
     @PostMapping
     public DoctorResponse addDoctor(@Valid @RequestBody DoctorRequest doctor){
@@ -31,5 +35,20 @@ public class DoctorController {
     public Optional<Patient> callNextPatient(@PathVariable Long doctorId){
         return queueService.callNextPatient(doctorId);
     }
-
+    @PatchMapping("/{doctorId}/toggle")
+    public DoctorSession toggleStatus(@PathVariable Long doctorId){
+        return doctorSessionService.toggleSessionStatus(doctorId);
+    }
+    @GetMapping("/{doctorId}/session")
+    public DoctorSession getSession(@PathVariable Long doctorId){
+        return doctorSessionService.getOrCreateTodaySession(doctorId);
+    }
+    @PatchMapping("/{doctorId}/end")
+    public void endSession(@PathVariable Long doctorId){
+        doctorSessionService.endTheSession(doctorId);
+    }
+    @PutMapping("/{doctorId}/session")
+    public DoctorSession updateSession(@PathVariable Long doctorId, @RequestBody SessionTimingRequest timing){
+        return doctorSessionService.updateSession(doctorId,timing.getStartTime(),timing.getEndTime());
+    }
 }
