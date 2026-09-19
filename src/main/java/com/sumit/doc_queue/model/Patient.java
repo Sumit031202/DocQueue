@@ -27,6 +27,6 @@ public class Patient {
     private LocalTime outTime;
     private Double consultationDuration;
     @ManyToOne
-    @JoinColumn(nullable = false, name = "session_id")
+    @JoinColumn(name = "session_id")
     private DoctorSession session;
 }
