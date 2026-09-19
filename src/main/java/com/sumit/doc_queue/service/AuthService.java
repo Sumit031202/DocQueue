@@ -7,13 +7,18 @@ import com.sumit.doc_queue.dto.LoginResponse;
 import com.sumit.doc_queue.model.Doctor;
 import com.sumit.doc_queue.model.Role;
 import com.sumit.doc_queue.repository.DoctorRepository;
+import com.sumit.doc_queue.security.DoctorUserDetails;
 import com.sumit.doc_queue.security.JwtService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -43,5 +48,16 @@ public class AuthService {
         String email=authenticated.getName();
         Doctor d=doctorRepository.findByEmail(email).orElseThrow();
         return new LoginResponse(d.getId(),jwtService.generateToken(email));
+    }
+    public void validateDoctorOwnership(Long doctorId){
+        Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
+        if(authentication==null || !(authentication.getPrincipal() instanceof DoctorUserDetails userDetails)){
+            throw new AccessDeniedException("User is not authenticated as a Doctor");
+        }
+        Long authenticatedDoctorId=userDetails.getDoctorId();
+
+        if(!Objects.equals(authenticatedDoctorId, doctorId)){
+            throw new AccessDeniedException("You cannot access another doctor's resources");
+        }
     }
 }

@@ -3,13 +3,9 @@ package com.sumit.doc_queue.service;
 import com.sumit.doc_queue.model.*;
 import com.sumit.doc_queue.repository.DoctorRepository;
 import com.sumit.doc_queue.repository.PatientRepository;
-import com.sumit.doc_queue.security.DoctorUserDetails;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.security.access.AccessDeniedException;
 
 import java.time.Duration;
 import java.time.LocalTime;
@@ -23,6 +19,7 @@ public class QueueService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorSessionService doctorSessionService;
+    private final AuthService authService;
 //    private final List<SseEmitter> emitters=new CopyOnWriteArrayList<>(); // thread safe ArrayList
     private final Map<Long, List<SseEmitter>> doctorEmitters = new ConcurrentHashMap<>();
     public Patient registerPatient(String name, Doctor doctor){
@@ -46,13 +43,7 @@ public class QueueService {
     public Optional<Patient> callNextPatient(Long doctorId){
         // time
         LocalTime now=LocalTime.now();
-        Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
-        DoctorUserDetails userDetails=(DoctorUserDetails)authentication.getPrincipal();
-        Long authenticatedDoctorId=userDetails.getDoctorId();
-
-        if(!Objects.equals(authenticatedDoctorId, doctorId)){
-            throw new AccessDeniedException("You cannot access another doctor's resources");
-        }
+        authService.validateDoctorOwnership(doctorId);
         List<Patient> activePatient=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
         if(!activePatient.isEmpty()){
             Patient currentPatient=activePatient.get(0);
@@ -127,22 +118,6 @@ public class QueueService {
         return emitter;
     }
 
-    public void broadcastQueueSize(Long doctorId){
-        long waitingCount=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.WAITING).size();
-        List<SseEmitter> emitters=doctorEmitters.get(doctorId);
-        if (emitters == null || emitters.isEmpty()) {
-            return; // Nobody is currently watching this doctor's stream!
-        }
-        for(SseEmitter emitter: emitters){
-            try{
-                emitter.send(SseEmitter.event()
-                        .name("Queue-Update")
-                        .data(waitingCount));
-            }catch(Exception e){
-                emitters.remove(emitter);
-            }
-        }
-    }
     public void broadcastQueue(Long doctorId){
         List<Patient> waitingQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.WAITING);
         List<Patient> progressQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);

@@ -18,7 +18,9 @@ import java.util.Optional;
 public class DoctorSessionService {
     private final DoctorSessionRepository doctorSessionRepository;
     private final DoctorRepository doctorRepository;
+    private final AuthService authService;
     public DoctorSession toggleSessionStatus(Long doctorId){
+        authService.validateDoctorOwnership(doctorId);
         LocalDate today=LocalDate.now();
         DoctorSession existingSession=doctorSessionRepository.findByDoctorIdAndSessionDateAndStatusIn(doctorId,today,List.of(SessionStatus.ACTIVE,SessionStatus.PAUSED)).orElseThrow(()->new RuntimeException("No session found with this doctorId: "+doctorId));
         if(existingSession.getStatus()==SessionStatus.ACTIVE){
@@ -45,12 +47,14 @@ public class DoctorSessionService {
         return doctorSessionRepository.save(newSession);
     }
     public void endTheSession(Long doctorId){
+        authService.validateDoctorOwnership(doctorId);
         LocalDate today=LocalDate.now();
         DoctorSession existingSession=doctorSessionRepository.findByDoctorIdAndSessionDateAndStatusIn(doctorId,today,List.of(SessionStatus.ACTIVE,SessionStatus.PAUSED)).orElseThrow(()->new RuntimeException("No active sessions for this doctor"));
         existingSession.setStatus(SessionStatus.COMPLETED);
         doctorSessionRepository.save(existingSession);
     }
     public DoctorSession updateSession(Long doctorId,LocalTime startTime, LocalTime endTime){
+        authService.validateDoctorOwnership(doctorId);
         LocalDate today=LocalDate.now();
         DoctorSession existingSession=doctorSessionRepository.findByDoctorIdAndSessionDateAndStatusIn(doctorId,today,List.of(SessionStatus.ACTIVE,SessionStatus.PAUSED)).orElseThrow(()->new RuntimeException("No active sessions for this doctor"));
         existingSession.setStartTime(startTime);
