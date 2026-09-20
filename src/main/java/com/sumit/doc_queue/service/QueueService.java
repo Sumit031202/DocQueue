@@ -22,6 +22,24 @@ public class QueueService {
     private final AuthService authService;
 //    private final List<SseEmitter> emitters=new CopyOnWriteArrayList<>(); // thread safe ArrayList
     private final Map<Long, List<SseEmitter>> doctorEmitters = new ConcurrentHashMap<>();
+
+    private void sendQueueState(SseEmitter emitter,List<Patient> waitingQueue,Patient active,String status) throws Exception{
+        emitter.send(SseEmitter.event()
+                .name("Queue-Update")
+                .data(waitingQueue));
+        emitter.send(SseEmitter.event()
+                .name("Session-Status")
+                .data(status));
+        if(active!=null){
+            emitter.send(SseEmitter.event()
+                    .name("Active-Patient")
+                    .data(active));
+        }else{
+            emitter.send(SseEmitter.event()
+                    .name("Active-Patient")
+                    .data("{\"fullName\":\"Nobody\"}"));
+        }
+    }
     public Patient registerPatient(String name, Doctor doctor){
         if(!doctorSessionService.checkSession(doctor.getId())){
             throw new RuntimeException("Registration is closed!");
@@ -101,21 +119,11 @@ public class QueueService {
             List<Patient> waitingQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.WAITING);
             List<Patient> progressQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
             Patient patient=null;
+            DoctorSession session=doctorSessionService.getOrCreateTodaySession(doctorId);
             if(!progressQueue.isEmpty()){
                 patient=progressQueue.get(progressQueue.size()-1);
             }
-            emitter.send(SseEmitter.event()
-                    .name("Queue-Update")
-                    .data(waitingQueue));
-            if(patient!=null){
-                emitter.send(SseEmitter.event()
-                        .name("Active-Patient")
-                        .data(patient));
-            }else{
-                emitter.send(SseEmitter.event()
-                        .name("Active-Patient")
-                        .data("{\"fullName\":\"Nobody\"}"));
-            }
+            sendQueueState(emitter,waitingQueue,patient,session.getStatus().name());
         }catch (Exception e){
             emitters.remove(emitter);
         }
@@ -127,6 +135,7 @@ public class QueueService {
         List<Patient> progressQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
         Patient patient=null;
         List<SseEmitter> emitters=doctorEmitters.get(doctorId);
+        DoctorSession session=doctorSessionService.getOrCreateTodaySession(doctorId);
         if (emitters == null || emitters.isEmpty()) {
             return; // Nobody is currently watching this doctor's stream!
         }
@@ -135,19 +144,7 @@ public class QueueService {
         }
         for(SseEmitter emitter: emitters){
             try{
-                emitter.send(SseEmitter.event()
-                        .name("Queue-Update")
-                        .data(waitingQueue));
-                if(patient!=null){
-                    emitter.send(SseEmitter.event()
-                            .name("Active-Patient")
-                            .data(patient));
-                }else{
-                    emitter.send(SseEmitter.event()
-                            .name("Active-Patient")
-                            .data("{\"fullName\":\"Nobody\"}"));
-                }
-
+                sendQueueState(emitter,waitingQueue,patient,session.getStatus().name());
             }catch(java.io.IOException e) {
                 // This just means a user closed or refreshed their browser tab.
                 // We silent-remove them without printing a massive scary red stack trace!
