@@ -41,6 +41,10 @@ public class QueueService {
     }
 
     public Optional<Patient> callNextPatient(Long doctorId){
+        DoctorSession session=doctorSessionService.getOrCreateTodaySession(doctorId);
+        if(session.getStatus()==SessionStatus.PAUSED){
+            throw new RuntimeException("Cannot call next patient while session is paused. Resume the session first.");
+        }
         // time
         LocalTime now=LocalTime.now();
         authService.validateDoctorOwnership(doctorId);
