@@ -10,6 +10,7 @@ import com.sumit.doc_queue.service.DoctorSessionService;
 import com.sumit.doc_queue.service.QueueService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,5 +42,10 @@ public class DoctorController {
     @PutMapping("/{doctorId}/session")
     public DoctorSession updateSession(@PathVariable Long doctorId, @RequestBody SessionTimingRequest timing){
         return doctorSessionService.updateSession(doctorId,timing.getStartTime(),timing.getEndTime());
+    }
+    @PostMapping("/{doctorId}/missed")
+    public ResponseEntity<?> makeCurrentPatientMissed(@PathVariable Long doctorId){
+        queueService.makeCurrentPatientMissed(doctorId);
+        return ResponseEntity.ok().build();
     }
 }

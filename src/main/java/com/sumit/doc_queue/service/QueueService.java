@@ -59,13 +59,13 @@ public class QueueService {
     }
 
     public Optional<Patient> callNextPatient(Long doctorId){
+        authService.validateDoctorOwnership(doctorId);
         DoctorSession session=doctorSessionService.getOrCreateTodaySession(doctorId);
         if(session.getStatus()==SessionStatus.PAUSED){
             throw new RuntimeException("Cannot call next patient while session is paused. Resume the session first.");
         }
         // time
         LocalTime now=LocalTime.now();
-        authService.validateDoctorOwnership(doctorId);
         List<Patient> activePatient=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
         if(!activePatient.isEmpty()){
             Patient currentPatient=activePatient.get(0);
@@ -159,5 +159,15 @@ public class QueueService {
     public Doctor find(Long id){
         return doctorRepository.findById(id).
                 orElseThrow(()->new RuntimeException("Doctor not found with ID: "+id));
+    }
+
+    public void makeCurrentPatientMissed(Long doctorId){
+        authService.validateDoctorOwnership(doctorId);
+        List<Patient> activePatient=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
+        if(!activePatient.isEmpty()){
+            activePatient.get(0).setStatus(QueueStatus.MISSED);
+            patientRepository.save(activePatient.get(0));
+        }
+        callNextPatient(doctorId);
     }
 }
