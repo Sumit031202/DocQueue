@@ -4,9 +4,7 @@ import com.sumit.doc_queue.model.Doctor;
 import com.sumit.doc_queue.model.Patient;
 import com.sumit.doc_queue.service.QueueService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @AllArgsConstructor

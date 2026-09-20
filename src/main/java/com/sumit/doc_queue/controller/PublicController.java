@@ -29,8 +29,8 @@ public class PublicController {
     public DoctorResponse addDoctor(@Valid @RequestBody DoctorRequest doctor){
         return doctorService.save(doctor);
     }
-    @GetMapping(value = "/stream",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamUpdates(@RequestParam Long doctorId){
+    @GetMapping(value = "/stream/{doctorId}",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamUpdates(@PathVariable Long doctorId){
         return queueService.subscribe(doctorId);
     }
     @GetMapping("/{doctorId}/session")
