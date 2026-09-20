@@ -29,11 +29,14 @@ public class DoctorController {
     }
     @PatchMapping("/{doctorId}/toggle")
     public DoctorSession toggleStatus(@PathVariable Long doctorId){
-        return doctorSessionService.toggleSessionStatus(doctorId);
+        DoctorSession session=doctorSessionService.toggleSessionStatus(doctorId);
+        queueService.broadcastQueue(doctorId);
+        return session;
     }
     @PatchMapping("/{doctorId}/end")
     public void endSession(@PathVariable Long doctorId){
         doctorSessionService.endTheSession(doctorId);
+        queueService.broadcastQueue(doctorId);
     }
     @PutMapping("/{doctorId}/session")
     public DoctorSession updateSession(@PathVariable Long doctorId, @RequestBody SessionTimingRequest timing){
