@@ -34,6 +34,6 @@ public class DoctorService {
 
         public DoctorInfo getInfo(Long doctorId){
             Doctor d=doctorRepository.findById(doctorId).orElseThrow(()->new RuntimeException("Doctor not found"));
-            return new DoctorInfo(d.getId(),d.getName(),d.getConsultationTime());
+            return new DoctorInfo(d.getId(),d.getName(),d.getConsultationTime(),d.getDefaultStartTime(),d.getDefaultEndTime());
         }
 }
