@@ -32,9 +32,14 @@ public class DoctorSessionService {
     }
     public DoctorSession getOrCreateTodaySession(Long doctorId){
         LocalDate today=LocalDate.now();
+        LocalTime now=LocalTime.now();
         Optional<DoctorSession> existingSession=doctorSessionRepository.findByDoctorIdAndSessionDateAndStatusIn(doctorId, LocalDate.now(), List.of(SessionStatus.ACTIVE, SessionStatus.PAUSED));
         if(existingSession.isPresent()){
             return existingSession.get();
+        }
+        List<DoctorSession> todaySessions=doctorSessionRepository.findByDoctorIdAndSessionDate(doctorId,today);
+        if(!todaySessions.isEmpty()){
+            return todaySessions.get(todaySessions.size()-1);
         }
         DoctorSession newSession=new DoctorSession();
         Doctor doctor=doctorRepository.findById(doctorId)
@@ -45,6 +50,23 @@ public class DoctorSessionService {
         newSession.setEndTime(doctor.getDefaultEndTime());
         newSession.setStatus(SessionStatus.ACTIVE);
         return doctorSessionRepository.save(newSession);
+    }
+    public DoctorSession startNewSession(Long doctorId,LocalTime startTime,LocalTime endTime){
+        authService.validateDoctorOwnership(doctorId);
+        LocalDate today=LocalDate.now();
+        Optional<DoctorSession> activeSession=doctorSessionRepository.findByDoctorIdAndSessionDateAndStatusIn(doctorId,today,List.of(SessionStatus.ACTIVE,SessionStatus.PAUSED));
+        if(activeSession.isPresent()){
+            throw new RuntimeException("An active session is already running");
+        }
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+        DoctorSession eveningSession = new DoctorSession();
+        eveningSession.setDoctor(doctor);
+        eveningSession.setSessionDate(today);
+        eveningSession.setStartTime(startTime);
+        eveningSession.setEndTime(endTime);
+        eveningSession.setStatus(SessionStatus.ACTIVE);
+        return doctorSessionRepository.save(eveningSession);
     }
     public void endTheSession(Long doctorId){
         authService.validateDoctorOwnership(doctorId);
