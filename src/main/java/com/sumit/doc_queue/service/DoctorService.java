@@ -1,5 +1,6 @@
 package com.sumit.doc_queue.service;
 
+import com.sumit.doc_queue.dto.DoctorInfo;
 import com.sumit.doc_queue.dto.DoctorRequest;
 import com.sumit.doc_queue.dto.DoctorResponse;
 import com.sumit.doc_queue.model.Doctor;
@@ -30,4 +31,9 @@ public class DoctorService {
         }
         return doctorResponses;
     }
+
+        public DoctorInfo getInfo(Long doctorId){
+            Doctor d=doctorRepository.findById(doctorId).orElseThrow(()->new RuntimeException("Doctor not found"));
+            return new DoctorInfo(d.getId(),d.getName(),d.getConsultationTime());
+        }
 }

@@ -1,5 +1,6 @@
 package com.sumit.doc_queue.controller;
 
+import com.sumit.doc_queue.dto.DoctorInfo;
 import com.sumit.doc_queue.dto.DoctorRequest;
 import com.sumit.doc_queue.dto.DoctorResponse;
 import com.sumit.doc_queue.model.DoctorSession;
@@ -36,5 +37,10 @@ public class PublicController {
     @GetMapping("/{doctorId}/session")
     public DoctorSession getSession(@PathVariable Long doctorId){
         return doctorSessionService.getOrCreateTodaySession(doctorId);
+    }
+
+    @GetMapping("/{doctorId}")
+    public DoctorInfo getInfo(@PathVariable Long doctorId){
+        return doctorService.getInfo(doctorId);
     }
 }
