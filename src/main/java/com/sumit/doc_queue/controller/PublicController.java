@@ -43,4 +43,9 @@ public class PublicController {
     public DoctorInfo getInfo(@PathVariable Long doctorId){
         return doctorService.getInfo(doctorId);
     }
+
+    @GetMapping("/{doctorId}/check")
+    public boolean checkSession(@PathVariable Long doctorId){
+        return doctorSessionService.checkSession(doctorId);
+    }
 }
