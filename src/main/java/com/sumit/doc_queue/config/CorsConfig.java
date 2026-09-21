@@ -19,7 +19,7 @@ public class CorsConfig {
                                 "https://www.docqueue.online",
                                 "https://docqueue-frontend.vercel.app"// For your live Vercel production deployment
                         )
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedMethods("GET", "POST","PATCH", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
