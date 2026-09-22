@@ -44,7 +44,7 @@ public class QueueService {
         if(!doctorSessionService.checkSession(doctor.getId())){
             throw new RuntimeException("Registration is closed!");
         }
-        DoctorSession session=doctorSessionService.getOrCreateTodaySession(doctor.getId());
+        DoctorSession session=doctorSessionService.getTodaySession(doctor.getId());
         Patient p=new Patient();
         p.setFullName(name);
         p.setArrivalTime(java.time.LocalDateTime.now());
@@ -60,7 +60,7 @@ public class QueueService {
 
     public Optional<Patient> callNextPatient(Long doctorId){
         authService.validateDoctorOwnership(doctorId);
-        DoctorSession session=doctorSessionService.getOrCreateTodaySession(doctorId);
+        DoctorSession session=doctorSessionService.getTodaySession(doctorId);
         if(session.getStatus()==SessionStatus.PAUSED){
             throw new RuntimeException("Cannot call next patient while session is paused. Resume the session first.");
         }
@@ -119,7 +119,7 @@ public class QueueService {
             List<Patient> waitingQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.WAITING);
             List<Patient> progressQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
             Patient patient=null;
-            DoctorSession session=doctorSessionService.getOrCreateTodaySession(doctorId);
+            DoctorSession session=doctorSessionService.getTodaySession(doctorId);
             if(!progressQueue.isEmpty()){
                 patient=progressQueue.get(progressQueue.size()-1);
             }
@@ -135,7 +135,7 @@ public class QueueService {
         List<Patient> progressQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
         Patient patient=null;
         List<SseEmitter> emitters=doctorEmitters.get(doctorId);
-        DoctorSession session=doctorSessionService.getOrCreateTodaySession(doctorId);
+        DoctorSession session=doctorSessionService.getTodaySession(doctorId);
         if (emitters == null || emitters.isEmpty()) {
             return; // Nobody is currently watching this doctor's stream!
         }
