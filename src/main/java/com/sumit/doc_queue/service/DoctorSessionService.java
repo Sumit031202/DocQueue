@@ -100,10 +100,17 @@ public class DoctorSessionService {
     public boolean checkSession(Long doctorId){
         LocalDate today=LocalDate.now();
         Optional<DoctorSession> existingSession=doctorSessionRepository.findByDoctorIdAndSessionDateAndStatusIn(doctorId,today,List.of(SessionStatus.ACTIVE,SessionStatus.PAUSED));
-        if(existingSession.isEmpty()){
-            return false;
+        if(existingSession.isPresent()){
+            return true;
         }
-        LocalTime now=LocalTime.now();
-        return !now.isBefore(existingSession.get().getStartTime()) && !now.isAfter(existingSession.get().getEndTime());
+        return false;
+    }
+    public DoctorSession getTodaySession(Long doctorId){
+        LocalDate today=LocalDate.now();
+        Optional<DoctorSession> existingSession=doctorSessionRepository.findByDoctorIdAndSessionDateAndStatusIn(doctorId,today,List.of(SessionStatus.ACTIVE,SessionStatus.PAUSED));
+        if(existingSession.isPresent()){
+            return existingSession.get();
+        }
+        throw new RuntimeException("Session does not exist");
     }
 }

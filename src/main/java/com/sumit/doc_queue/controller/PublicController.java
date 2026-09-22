@@ -39,6 +39,7 @@ public class PublicController {
     }
     @GetMapping("/{doctorId}/session")
     public DoctorSession getSession(@PathVariable Long doctorId){
+        System.out.println("Get session is hit");
         return doctorSessionService.getOrCreateTodaySession(doctorId);
     }
 
