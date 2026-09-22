@@ -1,9 +1,11 @@
 package com.sumit.doc_queue.controller;
 
 import com.sumit.doc_queue.dto.DoctorInfo;
+import com.sumit.doc_queue.dto.DoctorRegistrationRequest;
 import com.sumit.doc_queue.dto.DoctorRequest;
 import com.sumit.doc_queue.dto.DoctorResponse;
 import com.sumit.doc_queue.model.DoctorSession;
+import com.sumit.doc_queue.service.AuthService;
 import com.sumit.doc_queue.service.DoctorService;
 import com.sumit.doc_queue.service.DoctorSessionService;
 import com.sumit.doc_queue.service.QueueService;
@@ -22,13 +24,14 @@ public class PublicController {
     private final QueueService queueService;
     private final DoctorService doctorService;
     private final DoctorSessionService doctorSessionService;
+    private final AuthService authService;
     @GetMapping("/doctors")
     public List<DoctorResponse> getDoctors(){
         return doctorService.getAllDoctors();
     }
     @PostMapping("/doctors")
-    public DoctorResponse addDoctor(@Valid @RequestBody DoctorRequest doctor){
-        return doctorService.save(doctor);
+    public DoctorResponse addDoctor(@Valid @RequestBody DoctorRegistrationRequest doctor){
+        return authService.register(doctor);
     }
     @GetMapping(value = "/stream/{doctorId}",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamUpdates(@PathVariable Long doctorId){
