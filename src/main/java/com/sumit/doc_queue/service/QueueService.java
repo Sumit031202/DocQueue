@@ -23,13 +23,16 @@ public class QueueService {
 //    private final List<SseEmitter> emitters=new CopyOnWriteArrayList<>(); // thread safe ArrayList
     private final Map<Long, List<SseEmitter>> doctorEmitters = new ConcurrentHashMap<>();
 
-    private void sendQueueState(SseEmitter emitter,List<Patient> waitingQueue,Patient active,String status) throws Exception{
+    private void sendQueueState(SseEmitter emitter,List<Patient> waitingQueue,Patient active,String status,Double avgTime) throws Exception{
         emitter.send(SseEmitter.event()
                 .name("Queue-Update")
                 .data(waitingQueue));
         emitter.send(SseEmitter.event()
                 .name("Session-Status")
                 .data(status));
+        emitter.send(SseEmitter.event()
+                .name("Average-Waiting-Time")
+                .data(avgTime));
         if(active!=null){
             emitter.send(SseEmitter.event()
                     .name("Active-Patient")
@@ -122,10 +125,11 @@ public class QueueService {
             List<Patient> progressQueue=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId,QueueStatus.IN_PROGRESS);
             Patient patient=null;
             DoctorSession session=doctorSessionService.getTodaySession(doctorId);
+            Doctor d=doctorRepository.findById(doctorId).orElseThrow(()->new RuntimeException("Doctor not found"));
             if(!progressQueue.isEmpty()){
                 patient=progressQueue.get(progressQueue.size()-1);
             }
-            sendQueueState(emitter,waitingQueue,patient,session.getStatus().name());
+            sendQueueState(emitter,waitingQueue,patient,session.getStatus().name(),d.getConsultationTime());
         }catch (Exception e){
             emitters.remove(emitter);
         }
@@ -138,6 +142,7 @@ public class QueueService {
         Patient patient=null;
         List<SseEmitter> emitters=doctorEmitters.get(doctorId);
         DoctorSession session=doctorSessionService.getTodaySession(doctorId);
+        Doctor d=doctorRepository.findById(doctorId).orElseThrow(()->new RuntimeException("Doctor not found"));
         if (emitters == null || emitters.isEmpty()) {
             return; // Nobody is currently watching this doctor's stream!
         }
@@ -146,7 +151,7 @@ public class QueueService {
         }
         for(SseEmitter emitter: emitters){
             try{
-                sendQueueState(emitter,waitingQueue,patient,session.getStatus().name());
+                sendQueueState(emitter,waitingQueue,patient,session.getStatus().name(),d.getConsultationTime());
             }catch(java.io.IOException e) {
                 // This just means a user closed or refreshed their browser tab.
                 // We silent-remove them without printing a massive scary red stack trace!
