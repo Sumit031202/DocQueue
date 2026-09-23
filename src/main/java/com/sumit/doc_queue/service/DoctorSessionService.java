@@ -55,10 +55,11 @@ public class DoctorSessionService {
     public void endTheSession(Long doctorId){
         authService.validateDoctorOwnership(doctorId);
         LocalDate today=LocalDate.now();
+        LocalTime now=LocalTime.now();
         DoctorSession existingSession=doctorSessionRepository.findByDoctorIdAndSessionDateAndStatusIn(doctorId,today,List.of(SessionStatus.ACTIVE,SessionStatus.PAUSED)).orElseThrow(()->new RuntimeException("No active sessions for this doctor"));
         existingSession.setStatus(SessionStatus.COMPLETED);
+        existingSession.setEndTime(now);
         doctorSessionRepository.save(existingSession);
-        LocalTime now=LocalTime.now();
         List<Patient> activePatient=patientRepository.findByDoctorIdAndStatusOrderByArrivalTime(doctorId, QueueStatus.IN_PROGRESS);
         if(!activePatient.isEmpty()){
             activePatient.get(0).setOutTime(now);
