@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface DoctorSessionRepository extends JpaRepository<DoctorSession,Long> {
     Optional<DoctorSession> findByDoctorIdAndSessionDateAndStatusIn(Long doctorId, LocalDate sessionDate, List<SessionStatus> statuses);
     List<DoctorSession> findByDoctorIdAndSessionDate(Long doctorId,LocalDate sessionDate);
+    Optional<DoctorSession> findByDoctorIdAndStatusIn(Long doctorId,List<SessionStatus> statuses);
 }
