@@ -22,5 +22,5 @@ public class Doctor {
     private Long totalPatients;
 
     private LocalTime defaultStartTime=LocalTime.of(9,0);
-    private LocalTime defaultEndTime=LocalTime.of(13,0);
+    private LocalTime defaultEndTime=LocalTime.of(23,59);
 }
