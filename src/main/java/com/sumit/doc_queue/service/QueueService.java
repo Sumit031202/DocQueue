@@ -83,8 +83,10 @@ public class QueueService {
                     doctor.setConsultationTime(minutes);
                     doctor.setTotalPatients(1L);
                 }else{
-                    doctor.setConsultationTime((avgTime*count+minutes)/(count+1));
-                    doctor.setTotalPatients(count+1);
+                    if(minutes>0 || minutes<120){
+                        doctor.setConsultationTime((avgTime*count+minutes)/(count+1));
+                        doctor.setTotalPatients(count+1);
+                    }
                 }
                 doctorRepository.save(doctor);
             }
