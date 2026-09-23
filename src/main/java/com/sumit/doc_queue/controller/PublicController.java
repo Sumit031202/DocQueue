@@ -37,11 +37,6 @@ public class PublicController {
     public SseEmitter streamUpdates(@PathVariable Long doctorId){
         return queueService.subscribe(doctorId);
     }
-    @GetMapping("/{doctorId}/session")
-    public DoctorSession getSession(@PathVariable Long doctorId){
-        System.out.println("Get session is hit");
-        return doctorSessionService.getOrCreateTodaySession(doctorId);
-    }
 
     @GetMapping("/{doctorId}")
     public DoctorInfo getInfo(@PathVariable Long doctorId){

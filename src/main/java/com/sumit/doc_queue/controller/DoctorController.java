@@ -36,8 +36,9 @@ public class DoctorController {
     }
     @PatchMapping("/{doctorId}/end")
     public void endSession(@PathVariable Long doctorId){
+        System.out.println("end route hit");
         doctorSessionService.endTheSession(doctorId);
-        queueService.broadcastQueue(doctorId);
+//        queueService.broadcastQueue(doctorId);
     }
     @PutMapping("/{doctorId}/session")
     public DoctorSession updateSession(@PathVariable Long doctorId, @RequestBody SessionTimingRequest timing){
@@ -47,5 +48,10 @@ public class DoctorController {
     public ResponseEntity<?> makeCurrentPatientMissed(@PathVariable Long doctorId){
         queueService.makeCurrentPatientMissed(doctorId);
         return ResponseEntity.ok().build();
+    }
+    @GetMapping("/{doctorId}/session")
+    public DoctorSession getSession(@PathVariable Long doctorId){
+        System.out.println("Get session is hit");
+        return doctorSessionService.getOrCreateTodaySession(doctorId);
     }
 }
