@@ -78,20 +78,19 @@ public class QueueService {
                 long seconds= Duration.between(currentPatient.getInTime(),now).toSeconds();
                 double minutes=seconds/60.0;
                 currentPatient.setConsultationDuration(minutes);
-
-                Doctor doctor=currentPatient.getDoctor();
-                Double avgTime=doctor.getConsultationTime()==null? 0: doctor.getConsultationTime();
-                Long count=doctor.getTotalPatients();
-                if(count==null){
-                    doctor.setConsultationTime(minutes);
-                    doctor.setTotalPatients(1L);
-                }else{
-                    if(minutes>0 || minutes<120){
+                if(minutes>0 && minutes<120){
+                    Doctor doctor=currentPatient.getDoctor();
+                    Double avgTime=doctor.getConsultationTime()==null? 0: doctor.getConsultationTime();
+                    Long count=doctor.getTotalPatients();
+                    if(count==null){
+                        doctor.setConsultationTime(minutes);
+                        doctor.setTotalPatients(1L);
+                    }else{
                         doctor.setConsultationTime((avgTime*count+minutes)/(count+1));
                         doctor.setTotalPatients(count+1);
                     }
+                    doctorRepository.save(doctor);
                 }
-                doctorRepository.save(doctor);
             }
             patientRepository.save(currentPatient);
         }
