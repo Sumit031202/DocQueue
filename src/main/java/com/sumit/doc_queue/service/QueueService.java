@@ -4,6 +4,7 @@ import com.sumit.doc_queue.model.*;
 import com.sumit.doc_queue.repository.DoctorRepository;
 import com.sumit.doc_queue.repository.PatientRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -175,5 +176,17 @@ public class QueueService {
             patientRepository.save(activePatient.get(0));
         }
         callNextPatient(doctorId);
+    }
+    @Scheduled(fixedRate = 25000)
+    public void sendHeartBeat(){
+        doctorEmitters.forEach((doctorId,emitters)->{
+            for(SseEmitter emitter:emitters){
+                try{
+                    emitter.send(SseEmitter.event().comment("keep-alive"));
+                }catch(Exception e){
+                    emitters.remove(emitter);
+                }
+            }
+        });
     }
 }
