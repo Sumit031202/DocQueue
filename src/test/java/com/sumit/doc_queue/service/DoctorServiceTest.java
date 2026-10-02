@@ -1,5 +1,6 @@
 package com.sumit.doc_queue.service;
 
+import com.sumit.doc_queue.dto.DoctorInfo;
 import com.sumit.doc_queue.dto.DoctorRequest;
 import com.sumit.doc_queue.dto.DoctorResponse;
 import com.sumit.doc_queue.model.Doctor;
@@ -13,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -26,7 +28,6 @@ public class DoctorServiceTest {
     private DoctorService doctorService;
 
     @Test
-    @Disabled
     public void shouldGetAllDoctors(){
         Doctor d1 = new Doctor();
         Doctor d2 = new Doctor();
@@ -87,6 +88,38 @@ public class DoctorServiceTest {
         assertEquals(1L, response.getId());
         assertEquals("Aditya", response.getName());
         assertEquals("Neurologist", response.getSpecialization());
+    }
+
+    @Test
+    public void shouldGetInfoWhenDoctorExists(){
+        Long doctorId=1L;
+        Doctor d=new Doctor();
+        d.setId(1L);
+        d.setName("Dr. Sharma");
+        d.setConsultationTime(12.0);
+
+        when(doctorRepository.findById(doctorId))
+                .thenReturn(Optional.of(d));
+
+        DoctorInfo doctorInfo=doctorService.getInfo(doctorId);
+
+        assertEquals(1L,doctorInfo.getId());
+        assertEquals("Dr. Sharma",doctorInfo.getName());
+
+        verify(doctorRepository).findById(doctorId);
+    }
+    @Test
+    public void shouldThrowWhenDoctorNotFound(){
+        Long doctorId=1L;
+         when(doctorRepository.findById(doctorId))
+                 .thenReturn(Optional.empty());
+
+         RuntimeException exception=assertThrows(RuntimeException.class,()->{
+             doctorService.getInfo(doctorId);
+         });
+
+         assertEquals("Doctor not found",exception.getMessage());
+         verify(doctorRepository).findById(doctorId);
     }
 
 }
